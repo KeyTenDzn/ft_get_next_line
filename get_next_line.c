@@ -144,8 +144,7 @@ char    *get_next_line(int fd)
         }
         i++;
     }
-    get_next_line(fd);
-    return (str);
+    return get_next_line(fd);
 }
 
 int main(void)
