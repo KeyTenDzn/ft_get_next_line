@@ -20,7 +20,7 @@ char	*ft_strjoin(char const *s1, char const *s2)
 	j = 0;
 	str = (char *)
 		malloc(sizeof(char) * ft_strlen(s1) + sizeof(char) * ft_strlen(s2) + 1);
-	if (!str || !s1 || !s2)
+	if (!str)
 		return (NULL);
 	while (s1[i])
 	{
@@ -37,4 +37,22 @@ char	*ft_strjoin(char const *s1, char const *s2)
 	}
 	str[j] = '\0';
 	return (str);
+}
+
+char	*ft_strdup(char *src)
+{
+	char	*new;
+	int		i;
+
+	i = 0;
+	new = malloc(sizeof(char) * ft_strlen(src) + 1);
+	if (!(new))
+		return (NULL);
+	while (src[i] != '\0')
+	{
+		new[i] = src[i];
+		i++;
+	}
+	new[i] = '\0';
+	return (new);
 }

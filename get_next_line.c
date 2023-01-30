@@ -2,174 +2,134 @@
 #include <stdio.h>
 #include <fcntl.h>
 
-#include <stdlib.h>
-#include <unistd.h>
-
-#define BUFFER_SIZE 5
-
-size_t	ft_strlen(const char *str)
+int ft_verifstash(char *str, int readed)
 {
-	size_t	i;
+    int		i;
 
-	i = 0;
-	while (str[i])
-		i++;
-	return (i);
+    i = 0;
+    while (str[i])
+    {
+        if (str[i] == '\n')
+            return (0);
+        i++;
+    }
+    if (i > 0 && readed == 0)
+        return (0);
+    else if (readed == 0)
+        return (1);
+    return (-1);
 }
 
-char	*ft_strjoin(char const *s1, char const *s2)
+char    *ft_trimstash(char *str)
 {
-	char	*str;
-	size_t	i;
-	size_t	j;
+    int     i;
+    int     j;
+    char    *temp;
 
-	i = 0;
-	j = 0;
-	str = (char *)
-		malloc(sizeof(char) * ft_strlen(s1) + sizeof(char) * ft_strlen(s2) + 1);
-	if (!str || !s1 || !s2)
-		return (NULL);
-	while (s1[i])
-	{
-		str[j] = s1[i];
-		j++;
-		i++;
-	}
-	i = 0;
-	while (s2[i])
-	{
-		str[j] = s2[i];
-		i++;
-		j++;
-	}
-	str[j] = '\0';
-	return (str);
+    i = 0;
+    j = 0;
+    while (str[i] != '\n' && str[i])
+        i++;
+    temp = malloc(sizeof(char) * (i + 1));
+    while (j < i)
+    {
+        temp[j] = str[j];
+        j++;
+    }
+    temp[j] = str[j];
+    return (temp);
 }
 
-int	verified_stash(char *str)
+char    *ft_cleanstash(char *str)
 {
-	int	i;
+    int     j;
+    int     i;
+    int     k;
+    char    *temp;
 
-	i = 0;
-	while (str[i])
-	{
-		if (str[i] == '\n' || str[i] == '\0')
-			return (1);
-		i++;
-	}
-	return (0);
+    i = 0;
+    j = 0;
+    while (str[i] != '\n' && str[i])
+        i++;
+    if (str[i] == '\0')
+    {
+        temp = (malloc(1));
+        temp[0] = '\0';
+        return (temp);
+    }
+    i++;
+    j = i;
+    while (str[j])
+        j++;
+    temp = malloc(sizeof(char) * ((j - i) + 1));
+    if (!temp)
+        return NULL;
+    j = i;
+    k = 0;
+    while (str[j])
+    {
+        temp[k] = str[j];
+        k++;
+        j++;
+    }
+    temp[k] = '\0';
+    return (temp);
 }
 
-char	*trim_stash(char *str)
+char    *ft_read(int fd)
 {
-	int		i;
-	int		j;
-	char	*line;
+    int			readed;
+	char		buffer[BUFFER_SIZE + 1];
+    char        *temp;
+	static char	*stash;
 
-	i = 0;
-	while (str[i])
-	{
-		if (str[i] == '\n' || str[i] == '\0')
-		{
-			j = i;
-			i = 0;
-			line = malloc(sizeof(char) * (j + 1));
-			if (!line)
-				return (NULL);
-			while (i < j)
-			{
-				line[i] = str[i];
-				i++;
-			}
-			line[i] = '\n';
-			return (line);
-		}
-		i++;
-	}
-	return (str);
+    while (1 > 0)
+    {
+        readed = read(fd, buffer, BUFFER_SIZE);
+        buffer[readed] = '\0';
+        if (readed < 0 || (stash == NULL && buffer[0] == '\0'))
+            break ;
+        if (stash == NULL && readed > 0)
+		    stash = ft_strdup(buffer);
+        else
+            stash = ft_strjoin(stash, buffer);
+        if (ft_verifstash(stash, readed) == 0)
+        {
+            temp = ft_strdup(stash);
+            stash = ft_cleanstash(stash);
+            return (ft_trimstash(temp));
+        }
+        if (ft_verifstash(stash,readed) == 1)
+            break ;
+    }
+    return (NULL);
 }
-
-char	*clean_stash(char *str)
-{
-	char	*new_str;
-	int		i;
-	int		j;
-	int		temp;
-
-	i = 0;
-	j = 0;
-	while (str[i] != '\n')
-		i++;
-	i++;
-	temp = i;
-	while (str[i++])
-		j++;
-	new_str = malloc(sizeof(char) * (j + 1));
-	if (!new_str)
-		return (NULL);
-	i = 0;
-	while (str[temp])
-	{
-		new_str[i] = str[temp];
-		temp++;
-		i++;
-	}
-	new_str[i] = '\0';
-	return (new_str);
-}
-
 char	*get_next_line(int fd)
 {
-	static char	*stash;
-	char		*buff;
-	char		*temp;
-	int			readed;
+	char	*line;
 
 	if (fd < 0 || BUFFER_SIZE <= 0 || read(fd, 0, 0) < 0)
 		return (NULL);
-	buff = malloc(sizeof(char) * (BUFFER_SIZE + 1));
-	if (!buff)
-		return (NULL);
-	readed = read(fd, buff, BUFFER_SIZE);
-	if (stash == NULL && readed == 0)
-	{	
-		free (buff);
-		return (NULL);
-	}
-	if (stash == NULL)
-		stash = buff;
-	else
-		stash = ft_strjoin(stash, buff);
-	if (readed == 0)
-	{
-		free (buff);
-		free (stash);
-		return (NULL);
-	}
-	if (verified_stash(stash) == 1)
-	{
-		temp = trim_stash(stash);
-		stash = clean_stash(stash);
-		free (buff);
-		return (temp);
-	}
-	return (get_next_line(fd));
+	line = ft_read(fd);
+	return (line);
 }
 
-int main(void)
-{
- 	int		i;
- 	int		fd1;
-     char    *line;
 
- 	fd1 = open("empty.txt", O_RDONLY);	
-     i = 0;
-     while (i < 1)
- 	{
-         line = get_next_line(fd1);
-         printf("line : %s", line);
-         i++;
-     }
-     close(fd1);
- 	return (0);
-}
+// int main(void)
+// {
+// 	int		i;
+// 	int		fd1;
+//     char    *line;
+
+// 	fd1 = open("empty.txt", O_RDONLY);
+// 	while (6)
+// 	{
+// 		line = get_next_line(fd1);
+// 		if (line == NULL)
+// 			break ;
+//         printf ("line : %s", line);
+// 		free(line);
+// 	}
+//     close(fd1);
+// 	return (0);
+// }
