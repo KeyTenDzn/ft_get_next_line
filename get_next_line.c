@@ -30,13 +30,20 @@ char    *ft_trimstash(char *str)
     j = 0;
     while (str[i] != '\n' && str[i])
         i++;
-    temp = malloc(sizeof(char) * (i + 1));
+    if (str[i] == '\n') {
+        temp = malloc(sizeof(char) * (i + 2));
+    } else {
+        temp = malloc(sizeof(char) * (i + 1));
+    }
     while (j < i)
     {
         temp[j] = str[j];
         j++;
     }
     temp[j] = str[j];
+    if (temp[j] == '\n') {
+        temp[j+1] = 0;
+    }
     return (temp);
 }
 
@@ -81,6 +88,7 @@ char    *ft_read(int fd)
     int			readed;
 	char		buffer[BUFFER_SIZE + 1];
     char        *temp;
+    char        *temp2; 
 	static char	*stash;
 
     while (1 > 0)
@@ -91,19 +99,28 @@ char    *ft_read(int fd)
             break ;
         if (stash == NULL && readed > 0)
 		    stash = ft_strdup(buffer);
-        else
+        else {
+            temp = stash;
             stash = ft_strjoin(stash, buffer);
+            free(temp);
+        }
         if (ft_verifstash(stash, readed) == 0)
         {
             temp = ft_strdup(stash);
+            temp2 = stash;
             stash = ft_cleanstash(stash);
-            return (ft_trimstash(temp));
+            free(temp2);
+            temp2 = temp;
+            temp = ft_trimstash(temp);
+            free(temp2);
+            return (temp);
         }
         if (ft_verifstash(stash,readed) == 1)
             break ;
     }
     return (NULL);
 }
+
 char	*get_next_line(int fd)
 {
 	char	*line;
