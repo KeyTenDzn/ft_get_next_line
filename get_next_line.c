@@ -86,7 +86,7 @@ char    *ft_cleanstash(char *str)
 char    *ft_read(int fd)
 {
     int			readed;
-	char		buffer[BUFFER_SIZE + 1];
+	char		*buffer = malloc((BUFFER_SIZE + 1) * sizeof(char));
     char        *temp;
     char        *temp2; 
 	static char	*stash;
@@ -113,11 +113,13 @@ char    *ft_read(int fd)
             temp2 = temp;
             temp = ft_trimstash(temp);
             free(temp2);
+            free(buffer);
             return (temp);
         }
         if (ft_verifstash(stash,readed) == 1)
             break ;
     }
+    free(buffer);
     return (NULL);
 }
 
